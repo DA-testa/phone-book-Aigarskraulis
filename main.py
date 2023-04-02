@@ -1,12 +1,21 @@
-# python3
+class Contact:
+    def __init__(self, number, name):
+        self.number = number
+        self.name = name
 
 class Query:
     def __init__(self, query):
-        self.type = query[0]
-        self.number = int(query[1])
+        self.type, self.number, *self.name = query
+
+    def execute(self, contacts):
         if self.type == 'add':
-            self.name = query[2]
- 
+            contacts[self.number] = Contact(self.number, ''.join(self.name))
+        elif self.type == 'del':
+            contacts.pop(self.number, None)
+        else: # self.type == 'find'
+            contact = contacts.get(self.number, None)
+            return contact.name if contact is not None else 'not found'
+
 def read_queries():
     n = int(input())
     return [Query(input().split()) for i in range(n)]
@@ -16,32 +25,13 @@ def write_responses(result):
 
 def process_queries(queries):
     result = []
-    # Keep list of all existing (i.e. not deleted yet) contacts.
-    contacts = []
-    for cur_query in queries:
-        if cur_query.type == 'add':
-            # if we already have contact with such number,
-            # we should rewrite contact's name
-            for contact in contacts:
-                if contact.number == cur_query.number:
-                    contact.name = cur_query.name
-                    break
-            else: # otherwise, just add it
-                contacts.append(cur_query)
-        elif cur_query.type == 'del':
-            for j in range(len(contacts)):
-                if contacts[j].number == cur_query.number:
-                    contacts.pop(j)
-                    break
-        else:
-            response = 'not found'
-            for contact in contacts:
-                if contact.number == cur_query.number:
-                    response = contact.name
-                    break
+    # Keep dictionary of all existing (i.e. not deleted yet) contacts.
+    contacts = {}
+    for query in queries:
+        response = query.execute(contacts)
+        if response is not None:
             result.append(response)
     return result
 
 if __name__ == '__main__':
     write_responses(process_queries(read_queries()))
-
